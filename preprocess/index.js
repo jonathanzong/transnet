@@ -2,6 +2,9 @@
 
 require('dotenv').config()
 var request = require('request-promise');
+var jsonfile = require('jsonfile')
+ 
+var outfile = './placeIdToData.json'
 
 // path: array of [lat, lng]
 function snapToRoads(path) {
@@ -22,7 +25,7 @@ function placeDetails(placeId) {
 var placeIdToData = {};
 var osm = require("../data/oxford-osm.json");
 osm.features.forEach(function(feature, idx) {
-  console.log(feature.properties.name);
+  // console.log(feature.properties.name);
   // console.log(feature.properties.maxspeed);
   // console.log(feature.properties.oneway);
   // console.log(feature.properties.highway);
@@ -35,26 +38,47 @@ osm.features.forEach(function(feature, idx) {
       .then(function (body) {
         var json = JSON.parse(body);
         var points = json.snappedPoints;
-        points.forEach(function(place) {
+        points.forEach(function(place, i) {
           if (!placeIdToData[place.placeId]) {
             placeIdToData[place.placeId] = {
               placeId: place.placeId,
               features: {},
               points: [],
             };
+            // store place api details
+            setTimeout(function() {
+              placeDetails(place.placeId)
+                .then(function (body) {
+                  var json = JSON.parse(body);
+                  placeIdToData[place.placeId].details = {
+                    name: json.result.name,
+                    formatted_address: json.result.formatted_address
+                  }
+                })
+                .catch(function (err) {
+                  console.log(err);
+                });
+            }, 25 * i);
           }
-          // store place api geometry
+          // store roads api geometry
           placeIdToData[place.placeId].points.push(place.location);
           // store osm properties
           placeIdToData[place.placeId].features[feature.properties.osmid] = feature.properties;
         });
-        console.log(placeIdToData);
+        if (idx == osm.features.length - 1) {
+          // write to output
+          jsonfile.writeFile(outfile, placeIdToData, function (err) {
+            console.error(err)
+          });
+        }
       })
       .catch(function (err) {
         console.log(err);
       });
-  }, 50 * idx);
+  }, 25 * idx);
 });
+
+
 
 // placeDetails("ChIJf8V4V6nBdkgRp2t5duh8OsA")
 //   .then(function (body) {
