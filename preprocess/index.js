@@ -58,7 +58,7 @@ osm.features.forEach(function(feature, idx) {
                 .catch(function (err) {
                   console.log(err);
                 });
-            }, 25 * i);
+            }, 60 * i);
           }
           // store roads api geometry
           placeIdToData[place.placeId].points.push(place.location);
@@ -67,7 +67,7 @@ osm.features.forEach(function(feature, idx) {
         });
         if (idx == osm.features.length - 1) {
           // write to output
-          jsonfile.writeFile(outfile, placeIdToData, function (err) {
+          jsonfile.writeFile(outfile, placeIdToData, {spaces: 2}, function (err) {
             console.error(err)
           });
         }
@@ -75,7 +75,7 @@ osm.features.forEach(function(feature, idx) {
       .catch(function (err) {
         console.log(err);
       });
-  }, 25 * idx);
+  }, 50 * idx);
 });
 
 
