@@ -1,0 +1,14 @@
+{
+  "name": "geometry-to-placeid",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "geometry-to-placeid": "./index.js"
+  },
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1"
+  }
+}
