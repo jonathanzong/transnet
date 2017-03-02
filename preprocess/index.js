@@ -43,7 +43,7 @@ osm.features.forEach(function(feature, idx) {
             placeIdToData[place.placeId] = {
               placeId: place.placeId,
               features: {},
-              points: [],
+              points: {},
             };
             // store place api details
             setTimeout(function() {
@@ -61,7 +61,8 @@ osm.features.forEach(function(feature, idx) {
             }, 60 * i);
           }
           // store roads api geometry
-          placeIdToData[place.placeId].points.push(place.location);
+          var coordkey = place.location.latitude.toFixed(7) + "," + place.location.longitude.toFixed(7);
+          placeIdToData[place.placeId].points[coordkey] = place.location;
           // store osm properties
           placeIdToData[place.placeId].features[feature.properties.osmid] = feature.properties;
         });
