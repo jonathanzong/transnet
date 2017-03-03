@@ -2,7 +2,7 @@
 
 require('dotenv').config()
 var request = require('request-promise');
-var jsonfile = require('jsonfile')
+var jsonfile = require('jsonfile');
  
 var outfile = './output/placeIdToData.json'
 
@@ -22,30 +22,22 @@ function placeDetails(placeId) {
   return request(endpoint);
 }
 
-function coordKey(latlng) {
-  return latlng.latitude.toFixed(7) + "," + latlng.longitude.toFixed(7);
-}
-
 var placeIdToData = {};
 var osm = require("../data/oxford-osm.json");
 osm.features.forEach(function(feature, idx) {
-  // console.log(feature.properties.name);
-  // console.log(feature.properties.maxspeed);
-  // console.log(feature.properties.oneway);
-  // console.log(feature.properties.highway);
-  // console.log(feature.properties.lanes);
-  // console.log(feature.properties.length);
-
   var coords = feature.geometry.coordinates.map(function(x) { return [x[1], x[0]] });
+  // query roads api for placeId using OSM geometry
   setTimeout(function() {
     snapToRoads(coords)
       .then(function (body) {
         var json = JSON.parse(body);
         var points = json.snappedPoints;
         points.forEach(function(place, i) {
+          // construct a map from placeId to data
           if (!placeIdToData[place.placeId]) {
             placeIdToData[place.placeId] = {
-              placeId: place.placeId
+              placeId: place.placeId,
+              features: {}
             };
             // store place api details
             setTimeout(function() {
@@ -69,20 +61,20 @@ osm.features.forEach(function(feature, idx) {
                 });
             }, 60 * i);
           }
-          if (!placeIdToData[place.placeId][feature.properties.osmid]) {
-            placeIdToData[place.placeId][feature.properties.osmid] = {
+          if (!placeIdToData[place.placeId].features[feature.properties.osmid]) {
+            placeIdToData[place.placeId].features[feature.properties.osmid] = {
               points: [],
-              features: {}
+              properties: {}
             };
           }
-          // store previous point if necessary
+          // store previous point if necessary (in order to draw a line)
           if (i > 0 && place.placeId !== points[i - 1].placeId) {
-            placeIdToData[place.placeId][feature.properties.osmid].points.push(points[i - 1].location);
+            placeIdToData[place.placeId].features[feature.properties.osmid].points.push(points[i - 1].location);
           }
           // store roads api geometry
-          placeIdToData[place.placeId][feature.properties.osmid].points.push(place.location);
+          placeIdToData[place.placeId].features[feature.properties.osmid].points.push(place.location);
           // store osm properties
-          placeIdToData[place.placeId][feature.properties.osmid].features = feature.properties;
+          placeIdToData[place.placeId].features[feature.properties.osmid].properties = feature.properties;
         });
         if (idx == osm.features.length - 1) {
           // write to output
@@ -98,16 +90,3 @@ osm.features.forEach(function(feature, idx) {
       });
   }, 50 * idx);
 });
-
-
-
-// placeDetails("ChIJf8V4V6nBdkgRp2t5duh8OsA")
-//   .then(function (body) {
-//     var json = JSON.parse(body);
-//     console.log(json.result.name);
-//     console.log(json.result.formatted_address);
-//     console.log(json.result.geometry.location);
-//   })
-//   .catch(function (err) {
-//     console.log(err);
-//   });
