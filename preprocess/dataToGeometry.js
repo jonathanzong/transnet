@@ -105,9 +105,8 @@ var geometry = values(placeIdToData).map(function(place) {
     }
   }
   place.points = pts.map(function(latlng) {
-    return [latlng.latitude, latlng.longitude];
+    return [latlng.longitude, latlng.latitude];
   });
-  console.log(place);
   return place;
 });
 
@@ -115,6 +114,7 @@ var geometry = values(placeIdToData).map(function(place) {
 
 GeoJSON.parse(geometry, {'LineString': 'points'}, function(geojson) {
   jsonfile.writeFile(outfile, geojson, {spaces: 2}, function (err) {
-    console.error(err);
+    if (err) console.error(err);
+    else console.log('wrote output to ' + outfile);
   });
 })

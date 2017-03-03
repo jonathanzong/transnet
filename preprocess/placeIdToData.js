@@ -80,7 +80,8 @@ osm.features.forEach(function(feature, idx) {
           // write to output
           setTimeout(function() {
             jsonfile.writeFile(outfile, placeIdToData, {spaces: 2}, function (err) {
-              console.error(err)
+              if (err) console.error(err);
+              else console.log('wrote output to ' + outfile);
             });
           }, 1000);
         }
