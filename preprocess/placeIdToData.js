@@ -67,7 +67,7 @@ osm.features.forEach(function(feature, idx) {
                 .catch(function (err) {
                   console.log(err);
                 });
-            }, 123 * i);
+            }, 60 * i);
           }
           if (!placeIdToData[place.placeId][feature.properties.osmid]) {
             placeIdToData[place.placeId][feature.properties.osmid] = {
@@ -86,9 +86,11 @@ osm.features.forEach(function(feature, idx) {
         });
         if (idx == osm.features.length - 1) {
           // write to output
-          jsonfile.writeFile(outfile, placeIdToData, {spaces: 2}, function (err) {
-            console.error(err)
-          });
+          setTimeout(function() {
+            jsonfile.writeFile(outfile, placeIdToData, {spaces: 2}, function (err) {
+              console.error(err)
+            });
+          }, 1000);
         }
       })
       .catch(function (err) {
