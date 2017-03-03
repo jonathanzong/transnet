@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="//d3js.org/d3.v4.js"></script>
+  <style>
+    body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+    svg { width:100%; height: 100% }
+    path {
+      fill: none;
+      stroke: black;
+    }
+    #ui {
+      font-family: Helvetica, Arial, sans-serif;
+      background: white;
+      position: fixed;
+      display: inline;
+      top: 15px;
+      right: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="ui">
+  </div>
+  <script>
+    var svg = d3.select("body").append("svg");
+
+    var width = window.innerWidth, height = window.innerHeight;
+
+    var url = "./dataToGeometry.json";
+    d3.json(url, function(err, geojson) {
+      var projection = d3.geoMercator().fitSize([width, height], geojson);
+        path = d3.geoPath(projection);
+      svg.selectAll("path")
+        .data(geojson.features)
+        .enter().append("path")
+          .attr("d", path)
+          .on('mouseover', function(d) {
+            document.getElementById('ui').innerHTML = 
+              "placeId: " + d.properties.placeId + "<br/>address: " +
+              d.properties.details.formatted_address + "<br/>highway: " + 
+              d.properties.properties[0].highway + "<br/>max speed: " + 
+              d.properties.properties[0].maxspeed + "<br/>one way: " + 
+              d.properties.properties[0].oneway;
+          });
+    })
+    
+  </script>
+</body>
