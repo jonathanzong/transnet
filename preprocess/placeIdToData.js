@@ -23,7 +23,7 @@ function placeDetails(placeId) {
 }
 
 var placeIdToData = {};
-var osm = require("../data/oxford-osm.json");
+var osm = require("../data/oxfordshire-osm.json");
 osm.features.forEach(function(feature, idx) {
   var coords = feature.geometry.coordinates.map(function(x) { return [x[1], x[0]] });
   // query roads api for placeId using OSM geometry
