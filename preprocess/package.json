@@ -7,6 +7,7 @@
     "geojson": "^0.4.1",
     "jsonfile": "^2.4.0",
     "request": "^2.79.0",
-    "request-promise": "^4.1.1"
+    "request-promise": "^4.1.1",
+    "proj4": "latest"
   }
 }
