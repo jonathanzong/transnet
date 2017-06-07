@@ -14,6 +14,8 @@ var segmentPoints = require("../data/segment-points-oxfordshire.json");
 
 var combined = [];
 
+var roadIdCounter = 1;
+
 var length = segmentPoints.length;
 var prevLength = 0;
 
@@ -49,12 +51,14 @@ while (length != prevLength) {
         }
         else {
           // connect roads
-          if (!segment1.next) segment1.next = [];
-          if (!segment2.prev) segment2.prev = [];
-          if (segment1.next.indexOf(segment2.place_id[0].place_id) < 0)
-            segment1.next.push(segment2.place_id[0].place_id);
-          if (segment2.prev.indexOf(segment1.place_id[0].place_id) < 0)
-            segment2.prev.push(segment1.place_id[0].place_id);
+          if (!segment1.road_id) segment1.road_id = roadIdCounter++;
+          if (!segment2.road_id) segment2.road_id = roadIdCounter++;
+          if (!segment1.neighbors) segment1.neighbors = [];
+          if (!segment2.neighbors) segment2.neighbors = [];
+          if (segment1.neighbors.indexOf(segment2.road_id) < 0)
+            segment1.neighbors.push(segment2.road_id);
+          if (segment2.neighbors.indexOf(segment1.road_id) < 0)
+            segment2.neighbors.push(segment1.road_id);
         }
 
         break;
@@ -72,12 +76,14 @@ while (length != prevLength) {
         }
         else {
           // connect roads
-          if (!segment2.next) segment2.next = [];
-          if (!segment1.prev) segment1.prev = [];
-          if (segment2.next.indexOf(segment1.place_id[0].place_id) < 0)
-            segment2.next.push(segment1.place_id[0].place_id);
-          if (segment1.prev.indexOf(segment2.place_id[0].place_id) < 0)
-            segment1.prev.push(segment2.place_id[0].place_id);
+          if (!segment1.road_id) segment1.road_id = roadIdCounter++;
+          if (!segment2.road_id) segment2.road_id = roadIdCounter++;
+          if (!segment1.neighbors) segment1.neighbors = [];
+          if (!segment2.neighbors) segment2.neighbors = [];
+          if (segment1.neighbors.indexOf(segment2.road_id) < 0)
+            segment1.neighbors.push(segment2.road_id);
+          if (segment2.neighbors.indexOf(segment1.road_id) < 0)
+            segment2.neighbors.push(segment1.road_id);
         }
 
         break;
@@ -101,6 +107,14 @@ for (var i = 0; i < segmentPoints.length; i++) {
   segmentPoints[i].pts = segmentPoints[i].pts.filter(function(item, pos, ary) {
     return keys.indexOf(coordKey(item)) == pos;
   });  
+  // move road names
+  var road = segmentPoints[i].place_id[0].road;
+  segmentPoints[i].place_id = segmentPoints[i].place_id.map(function(e) {
+    return e.place_id;
+  });
+  segmentPoints[i].road = road;
+  // add road ids if not already
+  if (!segmentPoints[i].road_id) segmentPoints[i].road_id = roadIdCounter++;
 }
 
 jsonfile.writeFile(outfile, segmentPoints, {spaces: 2}, function (err) {
