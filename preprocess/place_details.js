@@ -4,21 +4,41 @@ require('dotenv').config()
 var request = require('request-promise');
 var jsonfile = require('jsonfile');
 
-var lineReader = require('readline').createInterface({
-  input: require('fs').createReadStream('../data/unique_place_Ids.csv')
-});
+// var lineReader = require('readline').createInterface({
+//   input: require('fs').createReadStream('../data/unique_place_Ids.csv')
+// });
 
-var placeIdToData_part = Object.keys(require('./output/place_details-part1.json'));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part2.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part3.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part4.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part5.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part6.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part7.json')));
-placeIdToData_part = placeIdToData_part.concat(Object.keys(require('./output/place_details-part8.json')));
-var placeIdToData = {};
-var i = 0;
-var failed_part = require('./output/failed-part.json');
+// var placeIdToData_part = Object.keys(require('./output/place_details-part1.json'));
+
+function extend(target) {
+    var sources = [].slice.call(arguments, 1);
+    sources.forEach(function (source) {
+        for (var prop in source) {
+            target[prop] = source[prop];
+        }
+    });
+    return target;
+}
+
+var placeIdToData = require('./output/place_details.json');
+var failed = require('./output/failed.json');
+
+var places = Object.keys(placeIdToData);
+var fails = [];
+for (var key in failed) {
+  fails = fails.concat(failed[key]);
+}
+console.log(places.length);
+console.log(fails.length);
+console.log(places.length + fails.length);
+console.log(uniq(places).length + uniq(fails).length);
+
+// jsonfile.writeFile('./output/place_details'+(Math.round(Math.random()*100000))+'.json', placeIdToData, {spaces: 2}, function (err) {
+//   if (err) console.error(err);
+// });
+
+// var i = 0;
+// var failed_part = require('./output/failed-part.json');
 // var failed_part2 = require('./output/failed-part1.json');
 // for (var key in failed_part2) {
 //   if (failed_part[key])
@@ -34,48 +54,48 @@ var failed = {};
 //   if (err) console.error(err);
 // });
 
-lineReader.on('line', function (line) {
-  if (placeIdToData_part.indexOf(line) >= 0) {
-    console.log('already have '+line);
-    return;
-  }
-  if (failed_part["NOT_FOUND"].indexOf(line) >= 0) {
-    console.log('already didnt find '+line);
-    return;
-  }
-  if (failed_part["400"].indexOf(line) >= 0 || failed_part["undefined"].indexOf(line) >= 0) {
-    console.log('already errored '+line);
-    return;
-  }
-  setTimeout(function() {
-    placeDetails(line).then(function (body) {
-      var json = JSON.parse(body);
-      if (json.status == "NOT_FOUND") {
-        console.log(line + " NOT_FOUND");
-        if (!failed["NOT_FOUND"]) failed["NOT_FOUND"] = [];
-        failed["NOT_FOUND"].push(line);
-        jsonfile.writeFile('./output/failed'+(Math.round(Math.random()*100000))+'.json', failed, {spaces: 2}, function (err) {
-          if (err) console.error(err);
-        });
-      }
-      else {
-        placeIdToData[line] = json.result;
-        console.log('wrote details for ' + line);
-        jsonfile.writeFile('./output/place_details'+(Math.round(Math.random()*100000))+'.json', placeIdToData, {spaces: 2}, function (err) {
-          if (err) console.error(err);
-        });
-      }
-    })
-    .catch(function (err) {
-      console.log(line+ " error " +err.statusCode);
-      if (!failed[""+err.statusCode]) failed[""+err.statusCode] = [];
-      failed[""+err.statusCode].push(line);
-      jsonfile.writeFile('./output/failed'+(Math.round(Math.random()*100000))+'.json', failed, {spaces: 2}, function (err) {
-        if (err) console.error(err);
-      });
-    });
-  }, (100 * i++));
-});
+// lineReader.on('line', function (line) {
+//   if (placeIdToData_part.indexOf(line) >= 0) {
+//     console.log('already have '+line);
+//     return;
+//   }
+//   if (failed_part["NOT_FOUND"].indexOf(line) >= 0) {
+//     console.log('already didnt find '+line);
+//     return;
+//   }
+//   if (failed_part["400"].indexOf(line) >= 0 || failed_part["undefined"].indexOf(line) >= 0) {
+//     console.log('already errored '+line);
+//     return;
+//   }
+//   setTimeout(function() {
+//     placeDetails(line).then(function (body) {
+//       var json = JSON.parse(body);
+//       if (json.status == "NOT_FOUND") {
+//         console.log(line + " NOT_FOUND");
+//         if (!failed["NOT_FOUND"]) failed["NOT_FOUND"] = [];
+//         failed["NOT_FOUND"].push(line);
+//         jsonfile.writeFile('./output/failed'+(Math.round(Math.random()*100000))+'.json', failed, {spaces: 2}, function (err) {
+//           if (err) console.error(err);
+//         });
+//       }
+//       else {
+//         placeIdToData[line] = json.result;
+//         console.log('wrote details for ' + line);
+//         jsonfile.writeFile('./output/place_details'+(Math.round(Math.random()*100000))+'.json', placeIdToData, {spaces: 2}, function (err) {
+//           if (err) console.error(err);
+//         });
+//       }
+//     })
+//     .catch(function (err) {
+//       console.log(line+ " error " +err.statusCode);
+//       if (!failed[""+err.statusCode]) failed[""+err.statusCode] = [];
+//       failed[""+err.statusCode].push(line);
+//       jsonfile.writeFile('./output/failed'+(Math.round(Math.random()*100000))+'.json', failed, {spaces: 2}, function (err) {
+//         if (err) console.error(err);
+//       });
+//     });
+//   }, (100 * i++));
+// });
 
 // placeId: string "placeId"
 function placeDetails(placeId) {
