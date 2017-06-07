@@ -7,14 +7,20 @@
   integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
   crossorigin="anonymous"></script>
   <style>
-    body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+    body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0;}
     svg { width:100%; height: 100% }
     path {
+      stroke-width: 0.1;
       fill: none;
       stroke: black;
     }
     path.active {
-      stroke-width: 5px;
+      /*stroke-width: 3px;*/
+      stroke: red;
+    }
+    path.neighbor {
+      /*stroke-width: 3px;*/
+      stroke: cyan;
     }
     #ui {
       font-family: Helvetica, Arial, sans-serif;
@@ -31,11 +37,41 @@
   <div id="ui">
   </div>
   <script>
-    var svg = d3.select("body").append("svg");
+  (window.onpopstate = function () {
+    var match,
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+        query  = window.location.search.substring(1);
+
+    urlParams = {};
+    while (match = search.exec(query))
+       urlParams[decode(match[1])] = decode(match[2]);
+})();
+  
+    var zoom = d3.zoom()
+        .scaleExtent([1, 15])
+        .on("zoom", zoomed);
+
+    function zoomed() {
+      console.log('lol')
+      svg.attr("transform", d3.event.transform);
+    }
+
+    var drag = d3.drag()
+        .on("drag", dragged);
+
+    function dragged(d) {
+      svg.attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+    }
+
+    var svg = d3.select("body").append("svg")//.append("g")
+        .call(zoom)
+        .call(drag).append("g");
 
     var width = window.innerWidth, height = window.innerHeight;
 
-    var url = "./supercombine-geo.json";
+    var url = "./supercombine-neighbors-combined-fixed-geo.json";
     d3.json(url, function(err, geojson) {
       var projection = d3.geoMercator().fitSize([width, height], geojson);
         path = d3.geoPath(projection);
@@ -43,13 +79,38 @@
         .data(geojson.features)
         .enter().append("path")
           .attr("d", path)
+          .attr("road_id", function(d) {
+            return d.properties.road_id;
+          })
+          .attr("road", function(d) {
+            return d.properties.road;
+          })
+          .attr("neighbors", function(d) {
+            var same = d.properties.neighbors_same ? d.properties.neighbors_same : [];
+            var diff = d.properties.neighbors_diff ? d.properties.neighbors_diff : [];
+            return JSON.stringify(same.concat(diff));
+          })
           .on('mouseover', function(d) {
-            document.getElementById('ui').innerHTML = 
-              JSON.stringify(d.properties);
+            if (urlParams["place_id"]) {
               $('path').removeClass('active');
-              $(this).addClass('active');
+              $('path').removeClass('neighbor');
+              var elem = $("path[properties*='"+urlParams["place_id"]+"']" )
+              elem.addClass("active");
+              document.getElementById('ui').innerHTML = elem.attr('road');
+            }
+            else {
+              document.getElementById('ui').innerHTML = d.road;
+              $('path').removeClass('active');
+              $('path').removeClass('neighbor');
+              var neighbors = JSON.parse($(this).attr('neighbors'));
+              neighbors.forEach(function (elem) {
+                var selected = $('path[road_id="'+elem+'"]');
+                selected.addClass('neighbor');
+              });
+              $(this).addClass('active');  
+            }            
           });
-    })
+    });
     
   </script>
 </body>
